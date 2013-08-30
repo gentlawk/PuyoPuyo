@@ -45,10 +45,18 @@ class Field
     @blocklist.push block
   end
   
+  def update_blocks
+    @blocklist.each do |block|
+      block.update(@block_s)
+    end
+  end
+
   def falldown_line(r)
     return unless @table[r].compact!
     @fallen = true
     @table[r].each.with_index do |block, l|
+      next if block.line == l
+      block.set_move_y(block.line * @block_s, l * @block_s, -4)
       block.line = l
     end
   end
@@ -115,6 +123,31 @@ class Field
         set(r,l,col.to_sym)
       end
     end
+  end
+
+  def blocks_move_x?
+    @blocklist.each do |block|
+      return true if block.move_x?
+    end
+    return false
+  end
+  def blocks_move_y?
+    @blocklist.each do |block|
+      return true if block.move_y?
+    end
+    return false
+  end
+  def blocks_move?
+    @blocklist.each do |block|
+      return true if block.move?
+    end
+    return false
+  end
+  def blocks_animation?
+    @blocklist.each do |block|
+      return true if block.animation?
+    end
+    return false
   end
 
   def print_field

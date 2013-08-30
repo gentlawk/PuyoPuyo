@@ -20,6 +20,7 @@ class FieldController
     @wait = 0
   end
   def update
+    update_blocks
     draw_field
     return if update_wait
     case @phase
@@ -34,13 +35,19 @@ class FieldController
   end
   def update_falldown
     fallen = @field.falldown
-    @wait = 60 if fallen
+    # @wait = 60 if fallen
     @phase = :eliminate
   end
   def update_eliminate
+    # wait fall animation
+    return if @field.blocks_move?
+
     eliminated = @field.eliminate
     @wait = 60 if eliminated
     @phase = :falldown
+  end
+  def update_blocks
+    @field.update_blocks
   end
 
   def draw_field
