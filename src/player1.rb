@@ -1,20 +1,11 @@
 #==============================================================================#
-#                                  require.rb                                  #
+#                                  player1.rb                                  #
 #------------------------------------------------------------------------------#
 #                       @copyright (c) 2013, BlueRedZone                       #
 #                               @author gentlawk                               #
 #==============================================================================#
-require "starruby"
-require "./phase"
-require "./block"
-require "./control_block"
-require "./input_controller"
-require "./field"
-require "./field_controller"
-require "./human"
-require "./player1"
-require "./player2"
-require "./game_main"
-require "./debug"
-require "./scene_base"
-require "./scene_puyopuyo"
+class Player1 < Human
+  def initialize(x, y, row_s, line_s, block_s)
+    super(InputController.new(1), x, y, row_s, line_s, block_s)
+  end
+end

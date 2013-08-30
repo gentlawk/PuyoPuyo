@@ -7,7 +7,7 @@
 class ScenePuyoPuyo < SceneBase
   def start
     @players = []
-    @players.push(FieldController.new(16,16,6,12,16))
+    @players.push(Player1.new(16,16,6,12,16))
     # test
     @players.first.instance_eval{ @field.set_table(<<EOF)
 ......

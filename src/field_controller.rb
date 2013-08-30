@@ -90,4 +90,11 @@ class FieldController
   def draw_field
     @field.draw_field(@x,@y)
   end
+
+  def input_move_right?; false; end
+  def input_move_left?; false; end
+  def input_rotate_right?; false; end
+  def input_rotate_left?; false; end
+  def input_fastfall_right?; false; end
+#  def input_momentfall?; false; end
 end
