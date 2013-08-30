@@ -11,6 +11,7 @@ class Phase
     @trans_condition_handler = {} # call method of phase change condition
     @phase = nil                  # present phase
     @next_phase = nil             # next phase
+    @wait = 0                     # wait count
   end
 
   def add_start_handler(phase, method)
@@ -44,6 +45,18 @@ class Phase
     # set next_phase
     @next_phase = phase
     # trans condition check
-    trans_condition_check
+    trans_condition_check unless wait?
+  end
+
+  def wait(time)
+    @wait = time
+  end
+  def wait?
+    @wait > 0
+  end
+  def waiting
+    return false unless wait?
+    @wait -= 1
+    return true
   end
 end

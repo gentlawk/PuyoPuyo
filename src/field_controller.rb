@@ -7,7 +7,6 @@
 class FieldController
   def initialize(x,y,row_s, line_s, block_s)
     @x = x; @y = y
-    @wait = 0
     @colors = [:r, :g, :b, :y]
     @row_s = row_s; @line_s = line_s; @block_s = block_s
     init_field
@@ -37,7 +36,7 @@ class FieldController
   def update
     update_blocks
     draw_field
-    return if update_wait
+    return if @phase.waiting
     case @phase.phase
     when :phase_trans
       @phase.trans_condition_check
@@ -48,9 +47,6 @@ class FieldController
     when :eliminate
       update_eliminate
     end
-  end
-  def update_wait
-    @wait > 0 ? (@wait -=1; true) : false
   end
   
   def start_control_block
@@ -68,7 +64,7 @@ class FieldController
   end
   def update_eliminate
     eliminated = @field.eliminate
-    @phase.change eliminated ? :falldown : :control_block
+    @phase.change eliminated ? :falldown : (@phase.wait(16); :control_block)
   end
 
   def falldown_eliminate_cond
