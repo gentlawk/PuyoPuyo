@@ -34,6 +34,11 @@ module GameMain
   def self.scene
     @scene.first
   end
+
+  def self.scene_change(scene)
+    self.scene_pop
+    self.scene_push(scene)
+  end
 end
 
 if __FILE__ == "game_main.rb"

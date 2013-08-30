@@ -7,6 +7,7 @@
 require "starruby"
 require "./rotate_enumerator"
 require "./phase"
+require "./drown_pos"
 require "./block"
 require "./stable_block"
 require "./free_block"

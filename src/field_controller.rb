@@ -9,6 +9,7 @@ class FieldController
     @x = x; @y = y
     @colors = [:r, :g, :b, :y]
     @row_s = row_s; @line_s = line_s; @block_s = block_s
+    @drown_area = [[2,11]]
     init_control_block_manager
     init_score_manager
     init_field
@@ -22,7 +23,7 @@ class FieldController
     @sm = ScoreManager.new
   end
   def init_field
-    @field = Field.new(@row_s, @line_s, @block_s, @cbm, @sm)
+    @field = Field.new(@row_s, @line_s, @block_s, @drown_area, @cbm, @sm)
   end
   def init_phase
     @phase = Phase.new
@@ -40,9 +41,11 @@ class FieldController
                          method(:start_fall_jammer))
     @phase.add_condition_handler(:fall_jammer,
                                  method(:fall_jammer_cond))
-    @phase.add_end_handler(:fall_jammer,
+    @phase.add_end_handler(:fall_jammer, :control_block,
                            method(:end_fall_jammer_to_control_block))
-    
+    # added :gameover handler
+    @phase.add_condition_handler(:gameover, method(:gameover_cond))
+
     @phase.change :control_block
   end
   def update
@@ -59,6 +62,7 @@ class FieldController
     ###############
     update_blocks
     draw_field
+    return if @phase.dead?
     return if @phase.waiting
     case @phase.phase
     when :phase_trans
@@ -71,7 +75,13 @@ class FieldController
       update_eliminate
     when :fall_jammer
       update_fall_jammer
+    when :gameover
+      update_gameover
     end
+  end
+
+  def dead?
+    @phase.dead?
   end
   
   def start_control_block
@@ -106,7 +116,12 @@ class FieldController
   end
   def update_fall_jammer
     fallen = @field.falldown(-10, false)
-    @phase.change :control_block
+    gameover = @field.check_gameover
+    @phase.change (gameover ? :gameover : :control_block)
+  end
+  def update_gameover
+    @phase.wait(60)
+    @phase.change :term
   end
 
   def falldown_cond
@@ -120,6 +135,9 @@ class FieldController
   def fall_jammer_cond
     # wait fall && land animation && standard wait
     !@field.blocks_move? && !@field.blocks_land? && @phase.pred_timer
+  end
+  def gameover_cond
+    @phase.kill
   end
 
   def update_blocks

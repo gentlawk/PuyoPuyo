@@ -43,6 +43,7 @@ EOF
     super
     @players.each do |controller|
       controller.update
+      GameMain.scene_change ScenePuyoPuyo if controller.dead?
     end
 
     @playtime += 1

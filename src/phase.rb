@@ -13,6 +13,7 @@ class Phase
     @next_phase = nil             # next phase
     @wait = 0                     # wait count
     @timer = 0                    # timer
+    @death = false                # phase termination flag
   end
 
   def add_handler(handler, args)
@@ -96,5 +97,12 @@ class Phase
   end
   def timer?
     @timer > 0
+  end
+
+  def kill
+    @death = true
+  end
+  def dead?
+    @death
   end
 end

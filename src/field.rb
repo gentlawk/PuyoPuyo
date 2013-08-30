@@ -8,10 +8,11 @@ class Field
   attr_reader :table
   attr_reader :chain
 
-  def initialize(row_s, line_s, block_s, cbm, sm)
+  def initialize(row_s, line_s, block_s, drown_area, cbm, sm)
     @row_s = row_s
     @line_s = line_s
     @block_s = block_s
+    @drown_area = drown_area.map{|pos| DrownPos.new(*pos,@block_s)}
     @fallen = false
     @eliminated = false
     @cbm = cbm
@@ -289,6 +290,13 @@ class Field
     end
   end
 
+  def check_gameover
+    (@active_blocks + @jamming_blocks).any? do |block|
+      m = block.row; n = block.line
+      @drown_area.map{|pos| pos.to_a }.include? [m,n]
+    end
+  end
+
   def get_color_table(tstr)
     table = Array.new(@row_s){ [] }
     tstr.split("\n").reverse.each.with_index do |line, l|
@@ -379,6 +387,12 @@ class Field
 
   def draw_field(x,y)
     y = @line_s * @block_s + y
+    # draw drown area
+    @drown_area.each do |drown_pos|
+      drown_pos.draw(x,y)
+    end
+
+    # draw blocks
     all_blocks.each do |block|
       block.draw(x,y)
     end
