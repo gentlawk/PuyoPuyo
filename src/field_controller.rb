@@ -9,6 +9,7 @@ class FieldController
   @@line_s = 12
   def initialize(x,y)
     @x = x; @y = y
+    @wait = 0
     init_field
     init_phase
   end
@@ -16,14 +17,26 @@ class FieldController
     @field = Field.new(@@row_s, @@line_s)
   end
   def init_phase
-    @phase = :falldown
-    @wait = 0
+    @phase = Phase.new
+    # added :falldown handler
+    @phase.add_condition_handler(:falldown,
+                                :eliminate,
+                                method(:falldown_eliminate_cond))
+    # added :elimiate handler
+    @phase.add_condition_handler(:eliminate,
+                                 :falldown,
+                                 method(:eliminate_falldown_cond))
+    @phase.change :falldown
   end
   def update
     update_blocks
     draw_field
     return if update_wait
-    case @phase
+    case @phase.phase
+    when :phase_trans
+      @phase.trans_condition_check
+    when :control_block
+      update_control_block
     when :falldown
       update_falldown
     when :eliminate
@@ -33,19 +46,25 @@ class FieldController
   def update_wait
     @wait > 0 ? (@wait -=1; true) : false
   end
-  def update_falldown
+  def update_control_block
     # wait collapse animation
     return if @field.blocks_reasonable_collapse?
-
+  end
+  def eliminate_falldown_cond
+    # wait collapse animation
+    !@field.blocks_reasonable_collapse?
+  end
+  def update_falldown
     fallen = @field.falldown
-    @phase = :eliminate
+    @phase.change :eliminate
+  end
+  def falldown_eliminate_cond
+    # wait fall animation
+    !@field.blocks_move?
   end
   def update_eliminate
-    # wait fall animation
-    return if @field.blocks_move?
-
     eliminated = @field.eliminate
-    @phase = :falldown
+    @phase.change :falldown
   end
   def update_blocks
     @field.update_blocks

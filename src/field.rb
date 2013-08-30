@@ -13,6 +13,7 @@ class Field
     @block_s = block_s
     @fallen = false
     @eliminated = false
+    @ctrl_block = ControlBlock.new
     init_table
     init_blocklist
     init_connect_table
@@ -191,7 +192,7 @@ class Field
 
   def draw_field(x,y)
     y = @line_s * @block_s + y
-    (@active_blocks + @collapse_blocks).each do |block|
+    (@active_blocks + @collapse_blocks + @ctrl_block.blocks).each do |block|
       block.draw(x,y,@block_s)
     end
   end
