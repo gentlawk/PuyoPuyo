@@ -20,6 +20,11 @@ class PivotControlBlock < ControlBlock
     super
     @pivot = nil
     @belongs = []
+    clear_turn_counter
+  end
+
+  def clear_turn_counter
+    @turn_counter = 1
   end
 
   def set(pivot, *belongs, postpone)
@@ -58,18 +63,38 @@ class PivotControlBlock < ControlBlock
     @belongs.each.with_index do |block,i|
       next if !block || i % 2 != 0
       row_dir = ir * (1 - i)
-      if (row_dir > 0 ? max_cond : min_cond) && !table[r+row_dir][l] # OK
+      if (row_dir > 0 ? max_cond : min_cond) && (!table[r+row_dir][l] || !table[r+row_dir][l+1]) # OK
         return {:dir => ir, :shift => 0}
       elsif (row_dir > 0 ? min_cond : max_cond) && !table[r-row_dir][l] # OK: shift
         return {:dir => ir, :shift => -row_dir}
       end
+      # turn
+      if @turn_counter == 0
+        clear_turn_counter
+        return {:dir => ir, :shift => 0, :turn => true}
+      end
+      @turn_counter -= 1
       # NG
       return false
     end
     return {:dir => ir, :shift => 0}
   end
 
+  def rotate_turn(dir, time)
+    @belongs.rotate!(2)
+    @belongs.each.with_index do |block, i|
+      next unless block
+      # set animation
+      to = 90 * (1 - i)
+      block.set_rotate(to + 180 * dir, to, time, 0, 0)
+    end
+  end
+
   def rotate(rotate, time)
+    if rotate[:turn] # turn
+      rotate_turn(rotate[:dir], time)
+      return
+    end
     # pivot
     @pivot.row += rotate[:shift]
     @pivot.set_rotate(0, 0, time, rotate[:shift], 0) if rotate[:shift] != 0
