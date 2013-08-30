@@ -7,6 +7,7 @@
 
 class Block
   attr_accessor :color, :row, :line
+  attr_reader :draw_pos
   def initialize(col)
     @color = col
     @row = -1

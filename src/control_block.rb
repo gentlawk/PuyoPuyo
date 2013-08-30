@@ -32,18 +32,20 @@ class ControlBlock
   end
 
   def can_falldown?(table)
-    blocks.group_by{|block| block.row}.each do |row, blks|
+    lines = blocks.group_by{|block| block.row}.map{|row, blks|
       min_line = blks.min_by{|blk| blk.line}.line
       return false if table[row].size >= min_line
-    end
-    return true
+      min_line - table[row].size
+    }
+    return lines.min # line number ctrl block can falldown
   end
 
-  def falldown(speed, block_s)
+  def falldown(line_num, speed, block_s)
     blocks.each do |block|
-      y = block.line * block_s
-      block.set_move_y(y, y - block_s, speed)
-      block.line -= 1
+      y1 = block.line * block_s
+      y2 = (block.line - line_num) *block_s
+      block.set_move_y(y1, y2, speed)
+      block.line -= line_num
     end
   end
 

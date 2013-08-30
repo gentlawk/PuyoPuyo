@@ -63,8 +63,9 @@ class Field
 
   def update_control_block
     return true if @ctrl_block.move_y?
-    if @ctrl_block.can_falldown?(@table)
-      @ctrl_block.falldown(-1, @block_s)
+    line_num = @ctrl_block.can_falldown?(@table)
+    if line_num
+      @ctrl_block.falldown(line_num ,-1, @block_s)
     else
       if @ctrl_block.postpone?
         @ctrl_block.update_postpone

@@ -95,6 +95,6 @@ class FieldController
   def input_move_left?; false; end
   def input_rotate_right?; false; end
   def input_rotate_left?; false; end
-  def input_fastfall_right?; false; end
+  def input_fastfall?; false; end
 #  def input_momentfall?; false; end
 end
