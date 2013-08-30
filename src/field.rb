@@ -116,10 +116,13 @@ class Field
   def falldown_line(r)
     return unless @table[r].compact!
     @fallen = true
+    wait = 0
     @table[r].each.with_index do |block, l|
       next if block.line == l
+      block.set_wait(wait) if wait != 0
       block.set_move_y(block.line * @block_s, l * @block_s, -6)
       block.line = l
+      wait += 3
     end
   end
 
@@ -215,6 +218,12 @@ class Field
   def blocks_collapse?
     @collapse_blocks.each do |block|
       return true if block.collapse?
+    end
+    return false
+  end
+  def blocks_land?
+    @active_blocks.each do |block|
+      return true if block.land?
     end
     return false
   end

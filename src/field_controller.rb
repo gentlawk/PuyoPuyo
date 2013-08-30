@@ -72,8 +72,8 @@ class FieldController
   end
 
   def falldown_eliminate_cond
-    # wait fall animation
-    !@field.blocks_move?
+    # wait fall && land animation
+    !@field.blocks_move? && !@field.blocks_land?
   end
   def eliminate_control_block_cond
     # wait collapse animation
