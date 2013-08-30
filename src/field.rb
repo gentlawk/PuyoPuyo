@@ -13,10 +13,14 @@ class Field
     @block_s = block_s
     @fallen = false
     @eliminated = false
-    @ctrl_block = ControlBlock.new
+    init_control_block_manager
     init_table
     init_blocklist
     init_connect_table
+  end
+  def init_control_block_manager
+    @cbm = ControlBlockManager.new
+    @cbm.set_type(PivotControlBlock)
   end
   def init_table
     @table = Array.new(@row_s){ [] }
@@ -48,42 +52,50 @@ class Field
   end
   
   def update_blocks
-    (@active_blocks + @collapse_blocks + @ctrl_block.blocks).each do |block|
+    (@active_blocks + @collapse_blocks + @cbm.ctrl_block.blocks).each do |block|
       block.update
     end
     @collapse_blocks.delete_if{|block| !block.collapse? }
   end
 
   def start_control_block(colors)
+    @cbm.ctrl_block.clear
     pivot = FreeBlock.new(colors.sample, @block_s)
     belong = FreeBlock.new(colors.sample, @block_s)
-    @ctrl_block.set(pivot, belong, 40)
-    @ctrl_block.start
+    @cbm.ctrl_block.set(pivot, belong, 40)
+    @cbm.ctrl_block.start(2,12)
   end
 
   def update_control_block(imr,ir,iff)
+    update_control_block_rotate(ir)
     update_control_block_move_x(imr)
     active = update_control_block_move_y(iff)
   end
 
+  def update_control_block_rotate(ir)
+    return true if @cbm.ctrl_block.rotate?
+    rotate = @cbm.ctrl_block.can_rotate?(ir, @table, @row_s)
+    return false unless rotate
+    @cbm.ctrl_block.rotate(rotate, 8)
+  end
+
   def update_control_block_move_x(imr)
-    return true if @ctrl_block.move_x?
-    return false unless @ctrl_block.can_move_row?(imr,@table,@row_s)
-    @ctrl_block.move_row(imr, 6, @block_s)
+    return true if @cbm.ctrl_block.move_x?
+    return false unless @cbm.ctrl_block.can_move_row?(imr,@table,@row_s)
+    @cbm.ctrl_block.move_row(imr, 6, @block_s)
     return true
   end
 
   def update_control_block_move_y(iff)
-    fall_y = @ctrl_block.can_falldown?(@table, @block_s)
-    Debug.print fall_y
+    fall_y = @cbm.ctrl_block.can_falldown?(@table, @block_s)
     if fall_y > 0 # fall
       speed = iff ? 6 : 0.8
-      @ctrl_block.falldown(fall_y > speed ? speed : fall_y)
+      @cbm.ctrl_block.falldown(fall_y > speed ? speed : fall_y)
     elsif fall_y < 0 # dent
-      @ctrl_block.fix_dent(-fall_y)
+      @cbm.ctrl_block.fix_dent(-fall_y)
     else # postpone or land
-      if !iff && @ctrl_block.postpone?
-        @ctrl_block.update_postpone
+      if !iff && @cbm.ctrl_block.postpone?
+        @cbm.ctrl_block.update_postpone
       else
         control_block_land
         return false
@@ -93,12 +105,12 @@ class Field
   end
 
   def control_block_land
-    stable_blocks = @ctrl_block.blocks.map{|block| block.convert_stable}
+    stable_blocks = @cbm.ctrl_block.blocks.map{|block| block.convert_stable}
     @active_blocks.concat stable_blocks
     stable_blocks.each do |block|
       @table[block.row][block.line] = block
     end
-    @ctrl_block.clear
+    @cbm.ctrl_block.clear
   end
 
   def falldown_line(r)
@@ -244,7 +256,7 @@ class Field
 
   def draw_field(x,y)
     y = @line_s * @block_s + y
-    (@active_blocks + @collapse_blocks + @ctrl_block.blocks).each do |block|
+    (@active_blocks + @collapse_blocks + @cbm.ctrl_block.blocks).each do |block|
       block.draw(x,y)
     end
   end

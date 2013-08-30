@@ -9,26 +9,20 @@ class ControlBlock
     clear
   end
   def clear
-    @pivot = nil
-    @belongs = []
     @postpone = 0
   end
 
-  def set(pivot, *belongs, postpone)
-    @pivot = pivot
-    @belongs = belongs
+  def set(postpone)
     @postpone = postpone
   end
   
-  def start
-    if @pivot
-      @pivot.row = 2
-      @pivot.line = 13
-    end
-    @belongs.each do |block|
-      block.row = 2
-      block.line = 14
-    end
+  def start(row, line)
+  end
+
+  def can_rotate?(ir, table, row_s)
+  end
+
+  def rotate(rotate, table, row_s)
   end
 
   def can_move_row?(imr, table, row_s)
@@ -59,7 +53,8 @@ class ControlBlock
   def can_falldown?(table, block_s)
     fall_ys = blocks.group_by{|block| block.row}.map{|row, blks|
       min_y = blks.min_by{|blk| blk.draw_pos[1]}.draw_pos[1]
-      min_y - table[row].size * block_s
+      # min_y is on table ? fall or dent : dent(line 0)
+      min_y >= 0 ? min_y - table[row].size * block_s : min_y
     }
     # fall_ys == 0 : can not fall
     #         >  0 : fall y
@@ -84,7 +79,7 @@ class ControlBlock
   end
 
   def blocks
-    return [@pivot, *@belongs].compact
+    return []
   end
 
   def move_x?
@@ -108,13 +103,4 @@ class ControlBlock
 
   def postpone?; @postpone > 0; end
   def active?; !@pivot.nil?; end
-end
-
-if __FILE__ == "control_block.rb"
-  require "./require.rb"
-  ctrl_block = ControlBlock.new
-  pivot = Block.new(:r)
-  belong = Block.new(:g)
-  ctrl_block.set(pivot, belong)
-  p ctrl_block.blocks
 end

@@ -7,8 +7,18 @@
 module Debug
   @line = 0
   @pos = 0
-  @font = StarRuby::Font.new("MS Gothic",12)
+  @fonts = {:win => "MS Gothic", :linux => "VL Gothic", :mac => "Hiragino"}
   @color = StarRuby::Color.new(255,255,255)
+  os = RUBY_PLATFORM.downcase
+  if os =~ /mswin|mingw|cygwin|bccwin/ # windows
+    @font = StarRuby::Font.new("MS Gothic",12)
+  elsif os =~ /darwin/ # mac
+    @font = StarRuby::Font.new("Hiragino",12)
+  elsif os =~ /linux/ # linux
+    @font = StarRuby::Font.new("VL Gothic",12)
+  else # ???
+    @font = StarRuby::Font.new("VL Gothic",12)
+  end
 
   def self.print(*objs)
     objs.each do |obj|

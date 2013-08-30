@@ -44,8 +44,8 @@ class Block
   end
 
   def draw(ox,oy,alpha=255)
-    x = ox + @draw_pos[0]
-    y = oy - @draw_pos[1]
+    x = ox + @draw_pos[0].round
+    y = oy - @draw_pos[1].round
     screen = GameMain.screen
     screen.render_rect(x, y, @block_s, @block_s, get_color(alpha))
   end
