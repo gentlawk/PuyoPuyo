@@ -72,7 +72,7 @@ class Field
     pivot = FreeBlock.new(colors.sample, @block_s)
     belong = FreeBlock.new(colors.sample, @block_s)
     @cbm.ctrl_block.set(pivot, belong, 40)
-    @cbm.ctrl_block.start(2,12)
+    @cbm.ctrl_block.start((@row_s - 1) / 2, @line_s)
   end
 
   def update_control_block(imr,ir,iff,imf)
@@ -133,12 +133,13 @@ class Field
     }
     return if fall.empty?
     # fall list animation
-    impact = 16
+    impact = @block_s
+    impact_d = impact / 3
     wait = 0
     base = stable.size
     fall.each.with_index do |block, i|
       l = base + i
-      imp = l < 2 ? l * 6 : impact
+      imp = l < 2 ? l * impact_d : impact
       block.set_land(block, imp, 16)
       if block.line != l
         block.set_move_y_wait(wait) if wait != 0
@@ -149,12 +150,13 @@ class Field
     end
     # stable list animation
     fallen_block = fall.first
+    _impact = impact
     stable.reverse.each.with_index do |block, i|
-      break if impact <= 0
+      break if _impact <= 0
       l = base - (i + 1)
-      impact = l * 6 if impact > l * 6
-      block.set_land(fallen_block, impact, 16)
-      impact /= 2
+      _impact = l * impact_d if _impact > l * impact_d
+      block.set_land(fallen_block, _impact, 16)
+      _impact /= 2
     end
   end
 
