@@ -18,10 +18,10 @@ class Phase
 
   def add_handler(handler, args)
     case args.size
-    when 2
+    when 2 # don't care of old/new phase
       phase, method = args
       handler[phase] = method
-    when 3 # don't care of old/new phase
+    when 3
       phase1, phase2, method = args
       handler[[phase1,phase2]] = method
     else

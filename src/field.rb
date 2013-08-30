@@ -251,7 +251,7 @@ class Field
     @sm.score += @sm.calc_chain_score(@connect_table, @chain)
     scene = GameMain.scene
     unless @connect_table.empty?
-      @jm.jammers += @jm.calc_jammer(@sm.chain_score, @jammer_rate, scene.margin_time, scene.playtime)
+      # @jm.jammers += @jm.calc_jammer(@sm.chain_score, @jammer_rate, scene.margin_time, scene.playtime)
     end
     eliminate_connection
     @eliminated

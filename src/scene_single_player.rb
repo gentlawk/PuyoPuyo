@@ -1,35 +1,16 @@
 #==============================================================================#
-#                              scene_puyopuyo.rb                               #
+#                            scene_single_player.rb                            #
 #------------------------------------------------------------------------------#
 #                       @copyright (c) 2013, BlueRedZone                       #
 #                               @author gentlawk                               #
 #==============================================================================#
-class ScenePuyoPuyo < SceneBase
-  attr_reader :playtime
-  attr_reader :margin_time
-
+class SceneSinglePlayer < ScenePuyoPuyo
   def start
-    @playtime = 0
-    @margin_time = 96
-
-    @players = []
-  end
-
-  def main
     super
+    @players.push(Player1.new(16,16,6,12,16))
   end
 
   def gameover
-    GameMain.scene_change ScenePuyoPuyo
-  end
-
-  def update
-    super
-    all_dead = @players.all? do |controller|
-      controller.update
-      controller.dead?
-    end
-    @playtime += 1
-    gameover if all_dead
+    GameMain.scene_change SceneSinglePlayer
   end
 end

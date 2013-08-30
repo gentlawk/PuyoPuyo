@@ -6,9 +6,14 @@
 #==============================================================================#
 module GameMain
   @scene = []
+  @gamemode = :single_player
 
   def self.main
-    scene_push(ScenePuyoPuyo)
+    scene = case @gamemode
+            when :single_player
+              SceneSinglePlayer
+            end
+    scene_push(scene)
     StarRuby::Game.run(320, 240, :title => "PuyoPuyo", :fps => 60) do |game|
       break if @scene.empty?
       @scene.last.main
