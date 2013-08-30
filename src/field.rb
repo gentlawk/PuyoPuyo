@@ -69,7 +69,7 @@ class Field
   def update_control_block_move_x(imr)
     return true if @ctrl_block.move_x?
     return false unless @ctrl_block.can_move_row?(imr,@table,@row_s)
-    @ctrl_block.move_row(imr, 4, @block_s)
+    @ctrl_block.move_row(imr, 6, @block_s)
     return true
   end
 
@@ -77,11 +77,12 @@ class Field
     fall_y = @ctrl_block.can_falldown?(@table, @block_s)
     Debug.print fall_y
     if fall_y > 0 # fall
-      @ctrl_block.falldown(fall_y > 0.8 ? 0.8 : fall_y) # fall_y > speed ? speed : fall_y
+      speed = iff ? 6 : 0.8
+      @ctrl_block.falldown(fall_y > speed ? speed : fall_y)
     elsif fall_y < 0 # dent
       @ctrl_block.fix_dent(-fall_y)
     else # postpone or land
-      if @ctrl_block.postpone?
+      if !iff && @ctrl_block.postpone?
         @ctrl_block.update_postpone
       else
         control_block_land

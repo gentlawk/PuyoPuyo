@@ -32,7 +32,7 @@ class FieldController
     @phase.add_condition_handler(:eliminate,
                                  :control_block,
                                  method(:eliminate_control_block_cond))
-    @phase.change :falldown #:control_block
+    @phase.change :control_block
   end
   def update
     update_blocks
