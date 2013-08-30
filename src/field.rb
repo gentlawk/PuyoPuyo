@@ -66,14 +66,15 @@ class Field
     @cbm.ctrl_block.start(2,12)
   end
 
-  def update_control_block(imr,ir,iff)
+  def update_control_block(imr,ir,iff,imf)
     update_control_block_rotate(ir)
     update_control_block_move_x(imr)
-    active = update_control_block_move_y(iff)
+    active = update_control_block_move_y(iff,imf)
   end
 
   def update_control_block_rotate(ir)
     return true if @cbm.ctrl_block.rotate?
+    return false if @cbm.ctrl_block.momentfall
     rotate = @cbm.ctrl_block.can_rotate?(ir, @table, @row_s)
     return false unless rotate
     @cbm.ctrl_block.rotate(rotate, 8)
@@ -86,15 +87,17 @@ class Field
     return true
   end
 
-  def update_control_block_move_y(iff)
+  def update_control_block_move_y(iff,imf)
     fall_y = @cbm.ctrl_block.can_falldown?(@table, @block_s)
     if fall_y > 0 # fall
       speed = iff ? 6 : 0.8
+      speed = imf || @cbm.ctrl_block.momentfall ? 64 : speed
+      @cbm.ctrl_block.momentfall = true if imf
       @cbm.ctrl_block.falldown(fall_y > speed ? speed : fall_y)
     elsif fall_y < 0 # dent
       @cbm.ctrl_block.fix_dent(-fall_y)
     else # postpone or land
-      if !iff && @cbm.ctrl_block.postpone?
+      if !iff && @cbm.ctrl_block.postpone? && !@cbm.ctrl_block.momentfall
         @cbm.ctrl_block.update_postpone
       elsif !@cbm.ctrl_block.rotate?
         control_block_land

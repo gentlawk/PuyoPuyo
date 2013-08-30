@@ -33,4 +33,7 @@ class Human < FieldController
   def input_fastfall?
     @ipt_ctrl.press?(:down)
   end
+  def input_momentfall?
+    @ipt_ctrl.press?(:up)
+  end
 end

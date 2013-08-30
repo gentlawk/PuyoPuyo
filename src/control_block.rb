@@ -5,11 +5,13 @@
 #                               @author gentlawk                               #
 #==============================================================================#
 class ControlBlock
+  attr_accessor :momentfall
   def initialize
     clear
   end
   def clear
     @postpone = 0
+    @momentfall = false
   end
 
   def set(postpone)
