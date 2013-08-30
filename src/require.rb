@@ -5,6 +5,7 @@
 #                               @author gentlawk                               #
 #==============================================================================#
 require "starruby"
+require "./rotate_enumerator"
 require "./phase"
 require "./block"
 require "./stable_block"

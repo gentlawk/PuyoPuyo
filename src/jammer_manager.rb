@@ -15,10 +15,7 @@ class JammerManager
   end
 
   def init_order
-    @order = Array.new(@row_s){|r| r}.shuffle!.each
-    def @order.next # loop next
-      super rescue self.rewind.next
-    end
+    @order = Array.new(@row_s){|r| r}.shuffle!.rotate_each
   end
 
   def jammers=(num)
