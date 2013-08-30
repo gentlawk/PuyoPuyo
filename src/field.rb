@@ -4,14 +4,13 @@
 #                       @copyright (c) 2013, BlueRedZone                       #
 #                               @author gentlawk                               #
 #==============================================================================#
-require "./block.rb"
-
 class Field
   attr_reader :table
 
-  def initialize(row_s, line_s)
+  def initialize(row_s, line_s, block_s = 16)
     @row_s = row_s
     @line_s = line_s
+    @block_s = block_s
     @fallen = false
     @eliminated = false
     init_table
@@ -139,6 +138,13 @@ class Field
     end
     # footer
     puts "-" * (@row_s + 2)
+  end
+
+  def draw_field(x,y)
+    y = @line_s * @block_s + y
+    @blocklist.each do |block|
+      block.draw(x,y,@block_s)
+    end
   end
 end
 
