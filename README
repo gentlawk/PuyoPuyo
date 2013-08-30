@@ -1,0 +1,19 @@
+Copyright (c) 2013, BlueRedZone
+gentlawk all rights reserved.
+
+srcディレクトリにあるすべてのプログラムはgentlawkが制作したものであり，
+著作権はgentlawkにあります．
+これらプログラムの無断転載や二次配布は禁止します．
+
+また，これらのプログラムを引用したソフトウェアを公開する場合は
+http://blueredzone.com/
+よりgentlawkまでご連絡をお願いします．
+
+ただし，これらプログラムのリポジトリはgithubを通して公開されているので
+pull request等は歓迎致します．
+
+- github
+https://github.com/github.com/gentlawk/PuyoPuyo/
+
+- リポジトリのクローン
+> git clone https://github.com/gentlawk/PuyoPuyo.git
