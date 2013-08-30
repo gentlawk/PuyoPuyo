@@ -28,7 +28,8 @@ class Field
     end
   end
   def init_blocklist
-    @blocklist = []
+    @active_blocks = []
+    @collapse_blocks = []
   end
   def init_connect_table
     @connect_table = []
@@ -36,19 +37,20 @@ class Field
   end
   def set(r,l,col)
     if @table[r][l]
-      @blocklist.delete @table[r][l]
+      @active_blocks.delete @table[r][l]
     end
     block = Block.new(col)
     block.row = r
     block.line = l
     @table[r][l] = block
-    @blocklist.push block
+    @active_blocks.push block
   end
   
   def update_blocks
-    @blocklist.each do |block|
+    (@active_blocks + @collapse_blocks).each do |block|
       block.update(@block_s)
     end
+    @collapse_blocks.delete_if{|block| !block.collapse? }
   end
 
   def falldown_line(r)
@@ -56,7 +58,7 @@ class Field
     @fallen = true
     @table[r].each.with_index do |block, l|
       next if block.line == l
-      block.set_move_y(block.line * @block_s, l * @block_s, -4)
+      block.set_move_y(block.line * @block_s, l * @block_s, -6)
       block.line = l
     end
   end
@@ -86,7 +88,7 @@ class Field
 
   def make_connect_table
     init_connect_table
-    @checklist = @blocklist.dup
+    @checklist = @active_blocks.dup
     while !@checklist.empty?
       block = @checklist.first
       r = block.row; l = block.line
@@ -101,8 +103,10 @@ class Field
       next if connection.size < 4
       @eliminated = true # check flag
       connection.each do |block|
+        block.set_collapse(40)
         @table[block.row][block.line] = nil
-        @blocklist.delete block
+        @active_blocks.delete block
+        @collapse_blocks.push block
       end
     end
   end
@@ -126,26 +130,41 @@ class Field
   end
 
   def blocks_move_x?
-    @blocklist.each do |block|
+    @active_blocks.each do |block|
       return true if block.move_x?
     end
     return false
   end
   def blocks_move_y?
-    @blocklist.each do |block|
+    @active_blocks.each do |block|
       return true if block.move_y?
     end
     return false
   end
   def blocks_move?
-    @blocklist.each do |block|
+    @active_blocks.each do |block|
       return true if block.move?
     end
     return false
   end
+  def blocks_collapse?
+    @collapse_blocks.each do |block|
+      return true if block.collapse?
+    end
+    return false
+  end
+  def blocks_reasonable_collapse?
+    @collapse_blocks.each do |block|
+      return true if block.reasonable_collapse?
+    end
+    return false
+  end
   def blocks_animation?
-    @blocklist.each do |block|
+    @active_blocks.each do |block|
       return true if block.animation?
+    end
+    @collapse_blocks.each do |block|
+      return true if block.collapse?
     end
     return false
   end
@@ -172,7 +191,7 @@ class Field
 
   def draw_field(x,y)
     y = @line_s * @block_s + y
-    @blocklist.each do |block|
+    (@active_blocks + @collapse_blocks).each do |block|
       block.draw(x,y,@block_s)
     end
   end
