@@ -7,7 +7,7 @@
 class Field
   attr_reader :table
 
-  def initialize(row_s, line_s, block_s = 16)
+  def initialize(row_s, line_s, block_s)
     @row_s = row_s
     @line_s = line_s
     @block_s = block_s
@@ -48,10 +48,23 @@ class Field
   end
   
   def update_blocks
-    (@active_blocks + @collapse_blocks).each do |block|
+    (@active_blocks + @collapse_blocks + @ctrl_block.blocks).each do |block|
       block.update(@block_s)
     end
     @collapse_blocks.delete_if{|block| !block.collapse? }
+  end
+
+  def start_control_block(colors)
+    pivot = Block.new(colors.sample)
+    belong = Block.new(colors.sample)
+    @ctrl_block.set(pivot, belong)
+    @ctrl_block.start
+  end
+
+  def update_control_block
+    if !@ctrl_block.move_y? && @ctrl_block.can_falldown?(@table)
+      @ctrl_block.falldown(-1, @block_s)
+    end
   end
 
   def falldown_line(r)

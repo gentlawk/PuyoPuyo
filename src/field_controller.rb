@@ -5,28 +5,34 @@
 #                               @author gentlawk                               #
 #==============================================================================#
 class FieldController
-  @@row_s = 6
-  @@line_s = 12
-  def initialize(x,y)
+  def initialize(x,y,row_s = 6, line_s = 12, block_s = 16)
     @x = x; @y = y
     @wait = 0
+    @colors = [:r, :g, :b, :y]
+    @row_s = row_s; @line_s = line_s; @block_s = block_s
     init_field
     init_phase
   end
   def init_field
-    @field = Field.new(@@row_s, @@line_s)
+    @field = Field.new(@row_s, @line_s, @block_s)
   end
   def init_phase
     @phase = Phase.new
+    # added :control_block handler
+    @phase.add_start_handler(:control_block,
+                             method(:start_control_block))
     # added :falldown handler
     @phase.add_condition_handler(:falldown,
-                                :eliminate,
-                                method(:falldown_eliminate_cond))
+                                 :eliminate,
+                                 method(:falldown_eliminate_cond))
     # added :elimiate handler
     @phase.add_condition_handler(:eliminate,
                                  :falldown,
                                  method(:eliminate_falldown_cond))
-    @phase.change :falldown
+    @phase.add_condition_handler(:eliminate,
+                                 :control_block,
+                                 method(:eliminate_control_block_cond))
+    @phase.change :control_block
   end
   def update
     update_blocks
@@ -46,26 +52,36 @@ class FieldController
   def update_wait
     @wait > 0 ? (@wait -=1; true) : false
   end
-  def update_control_block
-    # wait collapse animation
-    return if @field.blocks_reasonable_collapse?
+  
+  def start_control_block
+    @field.start_control_block(@colors)
   end
-  def eliminate_falldown_cond
-    # wait collapse animation
-    !@field.blocks_reasonable_collapse?
+  
+  def update_control_block
+    @field.update_control_block
   end
   def update_falldown
     fallen = @field.falldown
     @phase.change :eliminate
   end
-  def falldown_eliminate_cond
-    # wait fall animation
-    !@field.blocks_move?
-  end
   def update_eliminate
     eliminated = @field.eliminate
     @phase.change :falldown
   end
+
+  def falldown_eliminate_cond
+    # wait fall animation
+    !@field.blocks_move?
+  end
+  def eliminate_control_block_cond
+    # wait collapse animation
+    !@field.blocks_reasonable_collapse?
+  end
+  def eliminate_falldown_cond
+    # wait collapse animation
+    !@field.blocks_reasonable_collapse?
+  end
+
   def update_blocks
     @field.update_blocks
   end
