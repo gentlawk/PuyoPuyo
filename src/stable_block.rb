@@ -12,7 +12,7 @@ class StableBlock < Block
   def init_animation
     @move_x = nil
     @move_y = nil
-    @wait = nil
+    @move_y_wait = nil
     @collapse = nil
     @land = nil
     @draw_pos = [0,0]
@@ -40,12 +40,12 @@ class StableBlock < Block
       :counter => time
     }
   end
-  def set_wait(time)
-    @wait = {
+  def set_move_y_wait(time)
+    @move_y_wait = {
       :counter => time
     }
   end
-  def set_land(depth, time)
+  def set_land(block, depth, time)
     time_divide = Math::PI / time
     rad = 0
     shifts = []
@@ -53,13 +53,17 @@ class StableBlock < Block
       rad += time_divide
       shifts.push(-Math.sin(rad) * depth)
     end
-    @land = shifts
+    @land = {
+      :fallblock => block,
+      :shifts => shifts
+    }
   end
+  def set_dummy_flag block; set_land(block, 0, 2); end
 
-  def update_wait
-    return false unless @wait
-    @wait[:counter] -= 1
-    @wait = nil if @wait[:counter] == 0
+  def update_move_y_wait
+    return false unless @move_y_wait
+    @move_y_wait[:counter] -= 1
+    @move_y_wait = nil if @move_y_wait[:counter] == 0
     return true
   end
 
@@ -86,17 +90,18 @@ class StableBlock < Block
 
   def update_land
     return nil unless @land
-    y_shift = @land.shift
-    @land = nil if @land.empty?
+    return nil if @land[:fallblock].move_y?
+    y_shift = @land[:shifts].shift
+    @land = nil if @land[:shifts].empty?
     return y_shift
   end
 
   def update
-    # update wait
-    return if update_wait
+    # update move_y_wait
+    y_wait = update_move_y_wait
     # update move_x move_y
     x = update_move(@move_x){@move_x = nil}
-    y = update_move(@move_y){@move_y = nil}
+    y = y_wait ? @draw_pos[1] : update_move(@move_y){@move_y = nil}
     @draw_pos[0] = x ? x : @row * @block_s
     @draw_pos[1] = y ? y : @line * @block_s
     # update land
@@ -106,7 +111,8 @@ class StableBlock < Block
     update_collapse
   end
 
-  def wait?; !@wait.nil?; end
+  def move_y_wait?; !@move_y_wait.nil?; end
+  def wait?; move_y_wait?; end
   def move_x?; !@move_x.nil?; end
   def move_y?; !@move_y.nil?; end
   def move?; move_x? || move_y?; end

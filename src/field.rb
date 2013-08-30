@@ -109,20 +109,40 @@ class Field
     @active_blocks.concat stable_blocks
     stable_blocks.each do |block|
       @table[block.row][block.line] = block
+      block.set_dummy_flag(block) # set dummy fall flag
     end
     @cbm.ctrl_block.clear
   end
 
   def falldown_line(r)
-    return unless @table[r].compact!
-    @fallen = true
+    @fallen = @table[r].compact! ? true : false
+    stable,fall = @table[r].partition.with_index{|block, l|
+      block.line == l && !block.land? # dummy flag
+    }
+    return if fall.empty?
+    # fall list animation
+    impact = 16
     wait = 0
-    @table[r].each.with_index do |block, l|
-      next if block.line == l
-      block.set_wait(wait) if wait != 0
-      block.set_move_y(block.line * @block_s, l * @block_s, -6)
-      block.line = l
-      wait += 3
+    base = stable.size
+    fall.each.with_index do |block, i|
+      l = base + i
+      imp = l < 2 ? l * 6 : impact
+      block.set_land(block, imp, 16)
+      if block.line != l
+        block.set_move_y_wait(wait) if wait != 0
+        block.set_move_y(block.line * @block_s, l * @block_s, -6)
+        block.line = l
+        wait += 3
+      end
+    end
+    # stable list animation
+    fallen_block = fall.first
+    stable.reverse.each.with_index do |block, i|
+      break if impact <= 0
+      l = base - (i + 1)
+      impact = l * 6 if impact > l * 6
+      block.set_land(fallen_block, impact, 16)
+      impact /= 2
     end
   end
 
