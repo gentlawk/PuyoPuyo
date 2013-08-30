@@ -26,12 +26,20 @@ class FieldController
     # added :elimiate handler
     @phase.add_condition_handler(:eliminate,
                                  method(:eliminate_cond))
-    @phase.add_end_handler(:eliminate, :control_block,
-                                 method(:end_eliminate_to_control_block))
+    # added :fall_jammer handler
+    @phase.add_start_handler(:fall_jammer,
+                         method(:start_fall_jammer))
+    @phase.add_condition_handler(:fall_jammer,
+                                 method(:fall_jammer_cond))
+    @phase.add_end_handler(:fall_jammer,
+                           method(:end_fall_jammer_to_control_block))
     
     @phase.change :control_block
   end
   def update
+    #### debug ####
+    @field.instance_eval{Debug.print @jm.jammers}
+    ###############
     update_blocks
     draw_field
     return if @phase.waiting
@@ -44,15 +52,22 @@ class FieldController
       update_falldown
     when :eliminate
       update_eliminate
+    when :fall_jammer
+      update_fall_jammer
     end
   end
   
   def start_control_block
     @field.start_control_block(@colors)
   end
+  def start_fall_jammer
+    @field.start_fall_jammer
+  end
   
-  def end_eliminate_to_control_block
+  def end_fall_jammer_to_control_block
     @phase.set_timer(16)
+    # delete blocks is over limited line
+    @field.slice_limited_line
   end
 
   def update_control_block
@@ -67,7 +82,11 @@ class FieldController
   end
   def update_eliminate
     eliminated = @field.eliminate
-    @phase.change eliminated ? :falldown : :control_block
+    @phase.change eliminated ? :falldown : :fall_jammer
+  end
+  def update_fall_jammer
+    fallen = @field.falldown(-10, false)
+    @phase.change :control_block
   end
 
   def falldown_cond
@@ -75,8 +94,12 @@ class FieldController
     !@field.blocks_move? && !@field.blocks_land?
   end
   def eliminate_cond
-    # wait collapse animation & standard wait
-    !@field.blocks_reasonable_collapse? && @phase.pred_timer
+    # wait collapse animation
+    !@field.blocks_reasonable_collapse?
+  end
+  def fall_jammer_cond
+    # wait fall && land animation && standard wait
+    !@field.blocks_move? && !@field.blocks_land? && @phase.pred_timer
   end
 
   def update_blocks

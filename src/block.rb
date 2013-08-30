@@ -35,6 +35,8 @@ class Block
       StarRuby::Color.new(255,255,128,alpha)
     when :p
       StarRuby::Color.new(255,128,255,alpha)
+    when :j
+      StarRuby::Color.new(200,200,200,200*alpha/255)
     end
   end
 

@@ -15,6 +15,7 @@ class Field
     @eliminated = false
     init_control_block_manager
     init_table
+    init_jammer_manager
     init_blocklist
     init_connect_table
   end
@@ -32,8 +33,12 @@ class Field
       _dup
     end
   end
+  def init_jammer_manager
+    @jm = JammerManager.new(@row_s, @line_s)
+  end
   def init_blocklist
     @active_blocks = []
+    @jamming_blocks = []
     @collapse_blocks = []
   end
   def init_connect_table
@@ -51,8 +56,12 @@ class Field
     @active_blocks.push block
   end
   
+  def all_blocks
+    @active_blocks + @jamming_blocks + @collapse_blocks + @cbm.ctrl_block.blocks
+  end
+
   def update_blocks
-    (@active_blocks + @collapse_blocks + @cbm.ctrl_block.blocks).each do |block|
+    all_blocks.each do |block|
       block.update
     end
     @collapse_blocks.delete_if{|block| !block.collapse? }
@@ -117,7 +126,7 @@ class Field
     @cbm.ctrl_block.clear
   end
 
-  def falldown_line(r)
+  def falldown_line(r,speed,waiting)
     @fallen = @table[r].compact! ? true : false
     stable,fall = @table[r].partition.with_index{|block, l|
       block.line == l && !block.land? # dummy flag
@@ -133,9 +142,9 @@ class Field
       block.set_land(block, imp, 16)
       if block.line != l
         block.set_move_y_wait(wait) if wait != 0
-        block.set_move_y(block.line * @block_s, l * @block_s, -6)
+        block.set_move_y(block.line * @block_s, l * @block_s, speed)
         block.line = l
-        wait += 3
+        wait += 3 if waiting
       end
     end
     # stable list animation
@@ -149,12 +158,26 @@ class Field
     end
   end
 
-  def falldown
+  def falldown(speed = -6, waiting = true)
     @fallen = false
     @row_s.times do |r|
-      falldown_line(r)
+      falldown_line(r,speed,waiting)
     end
     @fallen
+  end
+
+  def check_con_jammer(r,l,col,block)
+    #return false unless @jamming_blocks.include? block # should be included
+    @connect_table[-1][:jammers].push block
+    return false
+  end
+
+  def check_con_block(r,l,col,block)
+    return false unless @checklist.include? block
+    return false unless @table[r][l] && @table[r][l].color == col
+    @checklist.delete block
+    @connect_table[-1][:blocks].push block
+    return true
   end
 
   def check_connection(r,l,col)
@@ -162,10 +185,9 @@ class Field
     return if l < 0 || l >= @line_s
     return unless @table[r][l]
     block = @table[r][l]
-    return unless @checklist.include? block
-    return unless @table[r][l] && @table[r][l].color == col
-    @checklist.delete block
-    @connect_table[-1].push block
+    cont = block.color == :j ? check_con_jammer(r,l,col,block) :
+      check_con_block(r,l,col,block)
+    return unless cont
     check_connection(r,l+1,col) # up
     check_connection(r,l-1,col) # down
     check_connection(r+1,l,col) # right
@@ -184,20 +206,31 @@ class Field
         next
       end
       col = block.color
-      @connect_table.push []
+      @connect_table.push({:blocks => [], :jammers => []})
       check_connection(r,l,col)
     end
   end
 
   def eliminate_connection
     @connect_table.each do |connection|
-      next if connection.size < 4
+      next if connection[:blocks].size < 4
       @eliminated = true # check flag
-      connection.each do |block|
+      #### test jammer ####
+      @jm.jammers += connection[:blocks].size
+      # delete blocks
+      connection[:blocks].each do |block|
         block.set_collapse(40)
         @table[block.row][block.line] = nil
         @active_blocks.delete block
         @collapse_blocks.push block
+      end
+      # delete jammers [naive]
+      connection[:jammers].each do |jammer|
+        next unless @jamming_blocks.include?(jammer) # already be deleted
+        jammer.set_collapse(40)
+        @table[jammer.row][jammer.line] = nil
+        @jamming_blocks.delete jammer
+        @collapse_blocks.push jammer
       end
     end
   end
@@ -207,6 +240,33 @@ class Field
     make_connect_table
     eliminate_connection
     @eliminated
+  end
+
+  def start_fall_jammer
+    fall_table = @jm.get_fall_table
+    fall_table.each.with_index do |jammers, row|
+      # col => block
+      jammers = jammers.map.with_index{|col, i|
+        next unless col
+        block = StableBlock.new(col, @block_s)
+        block.row = row
+        block.line = @line_s + 2 + i # base : linesize + 2[hide block]
+        @jamming_blocks.push block
+        block
+      }
+      # extend row to size of @line_s + 2
+      @table[row][@line_s + 1] = @table[row][@line_s + 1]
+      # concat
+      @table[row].concat jammers
+    end
+  end
+
+  def slice_limited_line
+    limit = @line_s + 2
+    @row_s.times do |row|
+      next if @table[row].size < limit
+      @table[row] = @table[row][0...limit]
+    end
   end
 
   def set_table(tstr)
@@ -221,19 +281,19 @@ class Field
   end
 
   def blocks_move_x?
-    @active_blocks.each do |block|
+    (@active_blocks + @jamming_blocks).each do |block|
       return true if block.move_x?
     end
     return false
   end
   def blocks_move_y?
-    @active_blocks.each do |block|
+    (@active_blocks + @jamming_blocks).each do |block|
       return true if block.move_y?
     end
     return false
   end
   def blocks_move?
-    @active_blocks.each do |block|
+    (@active_blocks + @jamming_blocks).each do |block|
       return true if block.move?
     end
     return false
@@ -245,7 +305,7 @@ class Field
     return false
   end
   def blocks_land?
-    @active_blocks.each do |block|
+    (@active_blocks + @jamming_blocks).each do |block|
       return true if block.land?
     end
     return false
@@ -257,7 +317,7 @@ class Field
     return false
   end
   def blocks_animation?
-    @active_blocks.each do |block|
+    (@active_blocks + @jamming_blocks).each do |block|
       return true if block.animation?
     end
     @collapse_blocks.each do |block|
@@ -288,7 +348,7 @@ class Field
 
   def draw_field(x,y)
     y = @line_s * @block_s + y
-    (@active_blocks + @collapse_blocks + @cbm.ctrl_block.blocks).each do |block|
+    all_blocks.each do |block|
       block.draw(x,y)
     end
   end
