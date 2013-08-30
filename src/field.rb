@@ -17,6 +17,7 @@ class Field
     @cbm = cbm
     @sm = sm
     @chain = 0
+    @jammer_rate = 70
     init_table
     init_jammer_manager
     init_blocklist
@@ -32,6 +33,7 @@ class Field
       _dup
     end
   end
+
   def init_jammer_manager
     @jm = JammerManager.new(@row_s, @line_s)
   end
@@ -218,8 +220,6 @@ class Field
   def eliminate_connection
     @eliminated = !@connect_table.empty? # check flag
     @connect_table.each do |connection|
-      #### test jammer ####
-      @jm.jammers += connection[:blocks].size
       # delete blocks
       connection[:blocks].each do |block|
         block.set_collapse(40)
@@ -248,6 +248,10 @@ class Field
     fair_connect_table
     @chain += 1 unless @connect_table.empty?
     @sm.score += @sm.calc_chain_score(@connect_table, @chain)
+    scene = GameMain.scene
+    unless @connect_table.empty?
+      @jm.jammers += @jm.calc_jammer(@sm.chain_score, @jammer_rate, scene.margin_time, scene.playtime)
+    end
     eliminate_connection
     @eliminated
   end

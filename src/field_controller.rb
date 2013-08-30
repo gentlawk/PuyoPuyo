@@ -48,6 +48,14 @@ class FieldController
   def update
     #### debug ####
     Debug.print @sm.debug_sprintf
+    margin = GameMain.scene.margin_time
+    playtime = GameMain.scene.playtime
+    Debug.print "margin:#{margin}"
+    Debug.print "sec:#{playtime / 60}"
+    Debug.print "jammers:#{@field.instance_eval{@jm.jammers}}"
+    Debug.print "jam_rate:#{@field.instance_eval{@jm.calc_effective_rate(@jammer_rate,margin,playtime)}}"
+    Debug.print "jam_calc:#{@field.instance_eval{@jm.gen_jammers}}"
+    Debug.print "rest:#{@field.instance_eval{@jm.instance_eval{@rest}}}"
     ###############
     update_blocks
     draw_field

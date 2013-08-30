@@ -5,7 +5,13 @@
 #                               @author gentlawk                               #
 #==============================================================================#
 class ScenePuyoPuyo < SceneBase
+  attr_reader :playtime
+  attr_reader :margin_time
+
   def start
+    @playtime = 0
+    @margin_time = 96
+
     @players = []
     @players.push(Player1.new(16,16,6,12,16))
     # test
@@ -38,5 +44,7 @@ EOF
     @players.each do |controller|
       controller.update
     end
+
+    @playtime += 1
   end
 end

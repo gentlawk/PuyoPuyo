@@ -30,6 +30,10 @@ module GameMain
   def self.scene_pop
     @scene.pop.terminate
   end
+
+  def self.scene
+    @scene.first
+  end
 end
 
 if __FILE__ == "game_main.rb"
