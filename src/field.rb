@@ -18,9 +18,13 @@ class Field
     init_connect_table
   end
   def init_table
-    @table = []
-    @row_s.times do |row|
-      @table.push Array.new(@line_s)
+    @table = Array.new(@row_s){ [] }
+    def @table.dup
+      _dup = []
+      self.each do |row|
+        _dup.push row.dup
+      end
+      _dup
     end
   end
   def init_blocklist
@@ -42,22 +46,10 @@ class Field
   end
   
   def falldown_line(r)
-    @line_s.times do |base|
-      next if @table[r][base]
-      # fall down to base
-      ((base+1)...@line_s).each do |b_line|
-        next unless @table[r][b_line] # skip space sequence
-        @fallen = true # check flag
-        @table[r].slice!(base...b_line) # fall down
-        @table[r].concat(Array.new(b_line-base)) # fill empty
-        # update block pos
-        (base...@line_s).each do |l|
-          next unless @table[r][l]
-          @table[r][l].row = r
-          @table[r][l].line = l
-        end
-        break
-      end
+    return unless @table[r].compact!
+    @fallen = true
+    @table[r].each.with_index do |block, l|
+      block.line = l
     end
   end
 
@@ -72,6 +64,7 @@ class Field
   def check_connection(r,l,col)
     return if r < 0 || r >= @row_s
     return if l < 0 || l >= @line_s
+    return unless @table[r][l]
     block = @table[r][l]
     return unless @checklist.include? block
     return unless @table[r][l] && @table[r][l].color == col
@@ -128,7 +121,11 @@ class Field
     # header
     puts "-" * (@row_s + 2)
     # field
-    f_trans = @table.transpose.reverse
+    dup_t = @table.dup
+    dup_t.each do |row|
+      row.concat Array.new(@line_s - row.size, nil)
+    end
+    f_trans = dup_t.transpose.reverse
     f_trans.each do |line|
       print "|"
       line.each do |block|
@@ -149,6 +146,7 @@ class Field
 end
 
 if __FILE__ == "field.rb"
+  require "./require"
   field = Field.new(6,12)
   tstr =<<EOF
 ......
