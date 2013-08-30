@@ -263,17 +263,31 @@ class Field
     limit = @line_s + 2
     @row_s.times do |row|
       next if @table[row].size < limit
+      @table[row][limit..-1].each do |block|
+        @jamming_blocks.delete block
+      end
       @table[row] = @table[row][0...limit]
     end
   end
 
-  def set_table(tstr)
-    init_table
-    tstr.split("\n").each.with_index do |line, l|
-      l = @line_s - (l + 1)
+  def get_color_table(tstr)
+    table = Array.new(@row_s){ [] }
+    tstr.split("\n").reverse.each.with_index do |line, l|
       line.split("").each.with_index do |col,r|
         next if col == "."
-        set(r,l,col.to_sym)
+        table[r][l] = col.to_sym
+      end
+    end
+    return table
+  end
+
+  def set_table(ctbl)
+    init_table
+    init_blocklist
+    @row_s.times do |r|
+      ctbl[r].each.with_index do |col, l|
+        next unless col
+        set(r,l,col)
       end
     end
   end
