@@ -5,7 +5,7 @@
 #                               @author gentlawk                               #
 #==============================================================================#
 class FieldController
-  def initialize(x,y,row_s = 6, line_s = 12, block_s = 16)
+  def initialize(x,y,row_s, line_s, block_s)
     @x = x; @y = y
     @wait = 0
     @colors = [:r, :g, :b, :y]
@@ -58,7 +58,8 @@ class FieldController
   end
   
   def update_control_block
-    @field.update_control_block
+    active = @field.update_control_block
+    @phase.change :falldown unless active
   end
   def update_falldown
     fallen = @field.falldown
@@ -66,7 +67,7 @@ class FieldController
   end
   def update_eliminate
     eliminated = @field.eliminate
-    @phase.change :falldown
+    @phase.change eliminated ? :falldown : :control_block
   end
 
   def falldown_eliminate_cond

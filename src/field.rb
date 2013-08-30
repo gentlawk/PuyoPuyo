@@ -57,14 +57,31 @@ class Field
   def start_control_block(colors)
     pivot = Block.new(colors.sample)
     belong = Block.new(colors.sample)
-    @ctrl_block.set(pivot, belong)
+    @ctrl_block.set(pivot, belong, 80)
     @ctrl_block.start
   end
 
   def update_control_block
-    if !@ctrl_block.move_y? && @ctrl_block.can_falldown?(@table)
+    return true if @ctrl_block.move_y?
+    if @ctrl_block.can_falldown?(@table)
       @ctrl_block.falldown(-1, @block_s)
+    else
+      if @ctrl_block.postpone?
+        @ctrl_block.update_postpone
+      else
+        control_block_land
+        return false
+      end
     end
+    return true
+  end
+
+  def control_block_land
+    @active_blocks.concat @ctrl_block.blocks
+    @ctrl_block.blocks.each do |block|
+      @table[block.row][block.line] = block
+    end
+    @ctrl_block.clear
   end
 
   def falldown_line(r)

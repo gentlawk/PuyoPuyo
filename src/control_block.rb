@@ -6,16 +6,18 @@
 #==============================================================================#
 class ControlBlock
   def initialize
-    init_blocks
+    clear
   end
-  def init_blocks
+  def clear
     @pivot = nil
     @belongs = []
+    @postpone = 0
   end
 
-  def set(pivot, *belongs)
+  def set(pivot, *belongs, postpone)
     @pivot = pivot
     @belongs = belongs
+    @postpone = postpone
   end
   
   def start
@@ -45,6 +47,10 @@ class ControlBlock
     end
   end
 
+  def update_postpone
+    @postpone -= 1
+  end
+
   def blocks
     return [@pivot, *@belongs].compact
   end
@@ -67,6 +73,9 @@ class ControlBlock
     end
     return false
   end
+
+  def postpone?; @postpone > 0; end
+  def active?; !@pivot.nil?; end
 end
 
 if __FILE__ == "control_block.rb"

@@ -4,6 +4,7 @@
 #                       @copyright (c) 2013, BlueRedZone                       #
 #                               @author gentlawk                               #
 #==============================================================================#
+
 class Block
   attr_accessor :color, :row, :line
   def initialize(col)
