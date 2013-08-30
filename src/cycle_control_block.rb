@@ -26,8 +26,8 @@ class CycleControlBlock < ControlBlock
       next unless block
       case i
       when 0; row_shift = 0; line_shift = 0
-      when 1; row_shift = 0; line_shift = -1
-      when 2; row_shift = 1; line_shift = -1
+      when 1; row_shift = 0; line_shift = 1
+      when 2; row_shift = 1; line_shift = 1
       when 3; row_shift = 1; line_shift = 0
       end
       block.row = row + row_shift
@@ -37,5 +37,24 @@ class CycleControlBlock < ControlBlock
   
   def blocks
     return @blocks.compact
+  end
+
+  def can_rotate?(ir, table, row_s)
+    return ir == 0 ? false : ir
+  end
+
+  def rotate(ir, time)
+    @blocks.rotate!(-ir)
+    @blocks.each.with_index do |block, i|
+      next unless block
+      case i
+      when 0; shift = ir > 0 ? [-1, 0] : [ 0,-1]
+      when 1; shift = ir > 0 ? [ 0, 1] : [-1, 0]
+      when 2; shift = ir > 0 ? [ 1, 0] : [ 0, 1]
+      when 3; shift = ir > 0 ? [ 0,-1] : [ 1, 0]
+      end
+      block.set_rotate(0, 0, time, *shift)
+      block.row += shift[0]
+    end
   end
 end

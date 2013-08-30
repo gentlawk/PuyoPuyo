@@ -25,6 +25,13 @@ class ControlBlock
   def rotate(rotate, table, row_s)
   end
 
+  def rotate?
+    blocks.each do |block|
+      return true if block.rotate?
+    end
+    return false
+  end
+
   def can_move_row?(imr, table, row_s)
     return false if imr == 0 # no move
     blocks.group_by{|block| block.line}.each do |line, blks|

@@ -32,42 +32,43 @@ class FreeBlock < Block
     }
   end
 
-  def set_rotate_x(from, to, time, push_shift)
+  def set_rotate_x(from, to, time, xshift)
     # x : rotate distance list based on to
     from_rad = from * Math::PI / 180
     to_rad = to * Math::PI / 180
     time_divide = (to_rad - from_rad) / time
     shift = Math.cos(to_rad) * @block_s
-    ps_divide = (push_shift * @block_s).quo time
+    xs_divide = (xshift * @block_s).quo time
     rotate = []
     rad = from_rad
-    ps = push_shift * @block_s
+    xs = xshift * @block_s
     time.times do
       rad += time_divide
-      ps -= ps_divide
-      rotate.push(Math.cos(rad) * @block_s - shift - ps)
+      xs -= xs_divide
+      rotate.push(Math.cos(rad) * @block_s - shift - xs)
     end
     return rotate
   end
 
-  def set_rotate_y(from, to, time)
+  def set_rotate_y(from, to, time, yshift)
     # y : rotate speed list base on from
     from_rad = from * Math::PI / 180
     to_rad = to * Math::PI / 180
     time_divide = (to_rad - from_rad) / time
+    ys_divide = (yshift * @block_s).quo time
     rotate = []
     rad = from_rad
     time.times do
       old = rad
       rad += time_divide
-      rotate.push((Math.sin(rad) - Math.sin(old)) * @block_s)
+      rotate.push((Math.sin(rad) - Math.sin(old)) * @block_s + ys_divide)
     end
     return rotate
   end
 
-  def set_rotate(from, to, time, shift)
-    @rotate_x = set_rotate_x(from, to, time, shift)
-    @rotate_y = set_rotate_y(from, to, time)
+  def set_rotate(from, to, time, xshift, yshift)
+    @rotate_x = set_rotate_x(from, to, time, xshift)
+    @rotate_y = set_rotate_y(from, to, time, yshift)
   end
 
   def update_move(param)

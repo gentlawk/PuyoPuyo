@@ -59,10 +59,13 @@ class Field
   end
 
   def start_control_block(colors)
+    @cbm.set_type(CycleControlBlock)
     @cbm.ctrl_block.clear
     pivot = FreeBlock.new(colors.sample, @block_s)
     belong = FreeBlock.new(colors.sample, @block_s)
-    @cbm.ctrl_block.set(pivot, belong, 40)
+    belong2 = FreeBlock.new(colors.sample, @block_s)
+    belong3 = FreeBlock.new(colors.sample, @block_s)
+    @cbm.ctrl_block.set(pivot, belong, belong2, belong3, 40)
     @cbm.ctrl_block.start(2,12)
   end
 

@@ -69,24 +69,17 @@ class PivotControlBlock < ControlBlock
     return {:dir => ir, :shift => 0}
   end
 
-  def rotate?
-    blocks.each do |block|
-      return true if block.rotate?
-    end
-    return false
-  end
-  
   def rotate(rotate, time)
     # pivot
     @pivot.row += rotate[:shift]
-    @pivot.set_rotate(0, 0, time, rotate[:shift]) if rotate[:shift] != 0
+    @pivot.set_rotate(0, 0, time, rotate[:shift], 0) if rotate[:shift] != 0
     # belongs
     @belongs.rotate!(-rotate[:dir])
     @belongs.each.with_index do |block, i|
       next unless block
       # set animation
       to = 90 * (1 - i)
-      block.set_rotate(to + 90 * rotate[:dir], to, time, rotate[:shift])
+      block.set_rotate(to + 90 * rotate[:dir], to, time, rotate[:shift], 0)
       case i
       when 0; block.row += rotate[:dir]
       when 1; block.row += 1
