@@ -18,11 +18,11 @@ class Human < FieldController
     super
   end
 
-  def input_move_right?
-    @ipt_ctrl.press?(:right)
-  end
-  def input_move_left?
-    @ipt_ctrl.press?(:left)
+  def input_move_row?
+    ir = @ipt_ctrl.press?(:right)
+    il = @ipt_ctrl.press?(:left)
+    return 0 unless ir ^ il
+    return ir ? 1 : -1
   end
   def input_rotate_right?
     @ipt_ctrl.press?(:button1)
@@ -30,7 +30,7 @@ class Human < FieldController
   def input_rotate_left?
     @ipt_ctrl.trigger?(:button2)
   end
-  def input_fastfall_right?
+  def input_fastfall?
     @ipt_ctrl.press?(:down)
   end
 end

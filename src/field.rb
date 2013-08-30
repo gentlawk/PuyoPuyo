@@ -40,7 +40,7 @@ class Field
     if @table[r][l]
       @active_blocks.delete @table[r][l]
     end
-    block = Block.new(col)
+    block = StableBlock.new(col, @block_s)
     block.row = r
     block.line = l
     @table[r][l] = block
@@ -49,24 +49,38 @@ class Field
   
   def update_blocks
     (@active_blocks + @collapse_blocks + @ctrl_block.blocks).each do |block|
-      block.update(@block_s)
+      block.update
     end
     @collapse_blocks.delete_if{|block| !block.collapse? }
   end
 
   def start_control_block(colors)
-    pivot = Block.new(colors.sample)
-    belong = Block.new(colors.sample)
+    pivot = FreeBlock.new(colors.sample, @block_s)
+    belong = FreeBlock.new(colors.sample, @block_s)
     @ctrl_block.set(pivot, belong, 80)
     @ctrl_block.start
   end
 
-  def update_control_block
-    return true if @ctrl_block.move_y?
-    line_num = @ctrl_block.can_falldown?(@table)
-    if line_num
-      @ctrl_block.falldown(line_num ,-1, @block_s)
-    else
+  def update_control_block(imr,irr,irl,iff)
+    update_control_block_move_x(imr)
+    active = update_control_block_move_y(iff)
+  end
+
+  def update_control_block_move_x(imr)
+    return true if @ctrl_block.move_x?
+    return false unless @ctrl_block.can_move_row?(imr,@table,@row_s)
+    @ctrl_block.move_row(imr, 4, @block_s)
+    return true
+  end
+
+  def update_control_block_move_y(iff)
+    fall_y = @ctrl_block.can_falldown?(@table, @block_s)
+    Debug.print fall_y
+    if fall_y > 0 # fall
+      @ctrl_block.falldown(fall_y > 0.8 ? 0.8 : fall_y) # fall_y > speed ? speed : fall_y
+    elsif fall_y < 0 # dent
+      @ctrl_block.fix_dent(-fall_y)
+    else # postpone or land
       if @ctrl_block.postpone?
         @ctrl_block.update_postpone
       else
@@ -78,8 +92,9 @@ class Field
   end
 
   def control_block_land
-    @active_blocks.concat @ctrl_block.blocks
-    @ctrl_block.blocks.each do |block|
+    stable_blocks = @ctrl_block.blocks.map{|block| block.convert_stable}
+    @active_blocks.concat stable_blocks
+    stable_blocks.each do |block|
       @table[block.row][block.line] = block
     end
     @ctrl_block.clear
@@ -224,14 +239,14 @@ class Field
   def draw_field(x,y)
     y = @line_s * @block_s + y
     (@active_blocks + @collapse_blocks + @ctrl_block.blocks).each do |block|
-      block.draw(x,y,@block_s)
+      block.draw(x,y)
     end
   end
 end
 
 if __FILE__ == "field.rb"
   require "./require"
-  field = Field.new(6,12)
+  field = Field.new(6,12,16)
   tstr =<<EOF
 ......
 b.....

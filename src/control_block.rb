@@ -31,21 +31,51 @@ class ControlBlock
     end
   end
 
-  def can_falldown?(table)
-    lines = blocks.group_by{|block| block.row}.map{|row, blks|
-      min_line = blks.min_by{|blk| blk.line}.line
-      return false if table[row].size >= min_line
-      min_line - table[row].size
-    }
-    return lines.min # line number ctrl block can falldown
+  def can_move_row?(imr, table, row_s)
+    return false if imr == 0 # no move
+    blocks.group_by{|block| block.line}.each do |line, blks|
+      if imr > 0 # move right
+        row = blks.max_by{|blk| blk.row}.row
+        return false if row >= row_s - 1
+        return false if table[row + 1][line]
+      else # move left
+        row = blks.min_by{|blk| blk.row}.row
+        return false if row <= 0
+        return false if table[row - 1][line]
+      end
+    end
+    return true
   end
 
-  def falldown(line_num, speed, block_s)
+  def move_row(imr, speed, block_s)
     blocks.each do |block|
-      y1 = block.line * block_s
-      y2 = (block.line - line_num) *block_s
-      block.set_move_y(y1, y2, speed)
-      block.line -= line_num
+      x1 = block.row * block_s
+      x2 = x1 + imr * block_s
+      block.set_move_x(x1, x2, imr * speed)
+      block.row += imr
+    end
+  end
+  
+  def can_falldown?(table, block_s)
+    fall_ys = blocks.group_by{|block| block.row}.map{|row, blks|
+      min_y = blks.min_by{|blk| blk.draw_pos[1]}.draw_pos[1]
+      min_y - table[row].size * block_s
+    }
+    # fall_ys == 0 : can not fall
+    #         >  0 : fall y
+    #         <  0 : dent y
+    return fall_ys.min
+  end
+
+  def falldown(y)
+    blocks.each do |block|
+      block.draw_pos[1] -= y
+    end
+  end
+
+  def fix_dent(y)
+    blocks.each do |block|
+      block.draw_pos[1] += y
     end
   end
 

@@ -7,6 +7,8 @@
 require "starruby"
 require "./phase"
 require "./block"
+require "./stable_block"
+require "./free_block"
 require "./control_block"
 require "./input_controller"
 require "./field"

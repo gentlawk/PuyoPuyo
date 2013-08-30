@@ -32,7 +32,7 @@ class FieldController
     @phase.add_condition_handler(:eliminate,
                                  :control_block,
                                  method(:eliminate_control_block_cond))
-    @phase.change :control_block
+    @phase.change :falldown #:control_block
   end
   def update
     update_blocks
@@ -58,7 +58,13 @@ class FieldController
   end
   
   def update_control_block
-    active = @field.update_control_block
+    inputs =
+      [
+       input_move_row?,
+       input_rotate_right?, input_rotate_left?,
+       input_fastfall?
+      ]
+    active = @field.update_control_block(*inputs)
     @phase.change :falldown unless active
   end
   def update_falldown
@@ -91,8 +97,7 @@ class FieldController
     @field.draw_field(@x,@y)
   end
 
-  def input_move_right?; false; end
-  def input_move_left?; false; end
+  def input_move_row?; false; end
   def input_rotate_right?; false; end
   def input_rotate_left?; false; end
   def input_fastfall?; false; end
