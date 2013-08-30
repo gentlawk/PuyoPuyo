@@ -57,4 +57,36 @@ class CycleControlBlock < ControlBlock
       block.row += shift[0]
     end
   end
+
+  def can_move_row?(imr, table, row_s)
+    return false if imr == 0 # no move
+    min_line = [@blocks[0], @blocks[3]].min_by{|block|
+      block.draw_pos[1]
+    }.line
+    row_left = @blocks[0].row; row_right = @blocks[3].row
+    [min_line, min_line + 1].each do |line|
+      if imr > 0 # move right
+        return false if row_right >= row_s - 1
+        return false if table[row_right + 1][line]
+      else # move left
+        return false if row_left <= 0
+        return false if table[row_left - 1][line]
+      end
+    end
+    return true
+  end
+
+  def can_falldown?(table, block_s)
+    min_y = [@blocks[0], @blocks[3]].min_by{|block|
+      block.draw_pos[1]
+    }.draw_pos[1]
+    row_down = @blocks[0].row
+    fall_ys = [row_down, row_down + 1].map{|row|
+      min_y >= 0 ? min_y - table[row].size * block_s : min_y
+    }
+    # fall_ys == 0 : can not fall
+    #         >  0 : fall y
+    #         <  0 : dent y
+    return fall_ys.min
+  end
 end
