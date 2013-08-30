@@ -14,14 +14,39 @@ class Phase
     @wait = 0                     # wait count
   end
 
-  def add_start_handler(phase, method)
-    @start_handler[phase] = method
+  def add_handler(handler, args)
+    case args.size
+    when 2
+      phase, method = args
+      handler[phase] = method
+    when 3 # don't care of old/new phase
+      phase1, phase2, method = args
+      handler[[phase1,phase2]] = method
+    else
+      raise(ArgumentError, "wrong number of arguments (#{args.size} for 2 or 3)")
+    end
   end
-  def add_end_handler(phase, method)
-    @end_handler[phase] = method
+
+  def add_start_handler(*args)
+    # phase, method # don't care of oldphase
+    # phase, oldphase, method
+    add_handler(@start_handler, args)
   end
-  def add_condition_handler(prephase, nextphase, cond)
-    @trans_condition_handler[[prephase,nextphase]] = cond
+  def add_end_handler(*args)
+    # phase, method # don't care of nextphase
+    # phase, nextphase, method
+    add_handler(@end_handler, args)
+  end
+  def add_condition_handler(*args)
+    # oldphase, method # don't care of nextphase
+    # oldphase, nextphase, method
+    add_handler(@trans_condition_handler, args)
+  end
+
+  def get_handler(handler, phase1, phase2)
+    method = handler[[phase1, phase2]]
+    method = handler[phase1] unless method
+    return method
   end
 
   def phase
@@ -29,18 +54,19 @@ class Phase
   end
 
   def trans_condition_check
-    cond = @trans_condition_handler[[@phase,@next_phase]]
+    cond = get_handler(@trans_condition_handler, @phase, @next_phase)
     return if cond && !cond.call
+    old = @phase
     @phase = @next_phase
     @next_phase = nil
     # start handler
-    method = @start_handler[@phase]
+    method = get_handler(@start_handler, @phase, old)
     method.call if method
   end
 
   def change(phase)
     # end handler
-    method = @end_handler[@phase]
+    method = get_handler(@end_handler, @phase, phase)
     method.call if method
     # set next_phase
     @next_phase = phase

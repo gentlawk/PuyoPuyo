@@ -22,15 +22,13 @@ class FieldController
                              method(:start_control_block))
     # added :falldown handler
     @phase.add_condition_handler(:falldown,
-                                 :eliminate,
-                                 method(:falldown_eliminate_cond))
+                                 method(:falldown_cond))
     # added :elimiate handler
     @phase.add_condition_handler(:eliminate,
-                                 :falldown,
-                                 method(:eliminate_falldown_cond))
-    @phase.add_condition_handler(:eliminate,
-                                 :control_block,
-                                 method(:eliminate_control_block_cond))
+                                 method(:eliminate_cond))
+    @phase.add_end_handler(:eliminate, :control_block,
+                                 method(:end_eliminate_to_control_block))
+    
     @phase.change :control_block
   end
   def update
@@ -53,6 +51,10 @@ class FieldController
     @field.start_control_block(@colors)
   end
   
+  def end_eliminate_to_control_block
+    @phase.wait(16)
+  end
+
   def update_control_block
     inputs = [input_move_row?,input_rotate?,
               input_fastfall?,input_momentfall?]
@@ -68,17 +70,13 @@ class FieldController
     @phase.change eliminated ? :falldown : (@phase.wait(16); :control_block)
   end
 
-  def falldown_eliminate_cond
+  def falldown_cond
     # wait fall && land animation
     !@field.blocks_move? && !@field.blocks_land?
   end
-  def eliminate_control_block_cond
-    # wait collapse animation
-    !@field.blocks_reasonable_collapse?
-  end
-  def eliminate_falldown_cond
-    # wait collapse animation
-    !@field.blocks_reasonable_collapse?
+  def eliminate_cond
+    # wait collapse animation & standard wait
+    !@field.blocks_reasonable_collapse? && !@phase.wait?
   end
 
   def update_blocks
