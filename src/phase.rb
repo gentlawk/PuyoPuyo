@@ -12,6 +12,7 @@ class Phase
     @phase = nil                  # present phase
     @next_phase = nil             # next phase
     @wait = 0                     # wait count
+    @timer = 0                    # timer
   end
 
   def add_handler(handler, args)
@@ -84,5 +85,16 @@ class Phase
     return false unless wait?
     @wait -= 1
     return true
+  end
+  def set_timer(time)
+    @timer = time
+  end
+  def pred_timer
+    return true if !timer?
+    @timer -= 1
+    !timer?
+  end
+  def timer?
+    @timer > 0
   end
 end

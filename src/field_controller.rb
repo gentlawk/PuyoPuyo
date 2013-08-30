@@ -52,7 +52,7 @@ class FieldController
   end
   
   def end_eliminate_to_control_block
-    @phase.wait(16)
+    @phase.set_timer(16)
   end
 
   def update_control_block
@@ -67,7 +67,7 @@ class FieldController
   end
   def update_eliminate
     eliminated = @field.eliminate
-    @phase.change eliminated ? :falldown : (@phase.wait(16); :control_block)
+    @phase.change eliminated ? :falldown : :control_block
   end
 
   def falldown_cond
@@ -76,7 +76,7 @@ class FieldController
   end
   def eliminate_cond
     # wait collapse animation & standard wait
-    !@field.blocks_reasonable_collapse? && !@phase.wait?
+    !@field.blocks_reasonable_collapse? && @phase.pred_timer
   end
 
   def update_blocks
