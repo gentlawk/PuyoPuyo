@@ -6,14 +6,17 @@
 #==============================================================================#
 class Field
   attr_reader :table
+  attr_reader :chain
 
-  def initialize(row_s, line_s, block_s, cbm)
+  def initialize(row_s, line_s, block_s, cbm, sm)
     @row_s = row_s
     @line_s = line_s
     @block_s = block_s
     @fallen = false
     @eliminated = false
     @cbm = cbm
+    @sm = sm
+    @chain = 0
     init_table
     init_jammer_manager
     init_blocklist
@@ -95,6 +98,9 @@ class Field
   def update_control_block_move_y(iff,imf)
     fall_y = @cbm.ctrl_block.can_falldown?(@table, @block_s)
     if fall_y > 0 # fall
+      # add score
+      @sm.score += 1 if iff && !imf && !@cbm.ctrl_block.momentfall
+
       speed = iff ? 6 : 0.8
       speed = imf || @cbm.ctrl_block.momentfall ? 64 : speed
       @cbm.ctrl_block.momentfall = true if imf
@@ -210,9 +216,8 @@ class Field
   end
 
   def eliminate_connection
+    @eliminated = !@connect_table.empty? # check flag
     @connect_table.each do |connection|
-      next if connection[:blocks].size < 4
-      @eliminated = true # check flag
       #### test jammer ####
       @jm.jammers += connection[:blocks].size
       # delete blocks
@@ -233,14 +238,24 @@ class Field
     end
   end
 
+  def fair_connect_table
+    @connect_table.select!{|connection| connection[:blocks].size >= 4}
+  end
+
   def eliminate
     @eliminated = false
     make_connect_table
+    fair_connect_table
+    @chain += 1 unless @connect_table.empty?
+    @sm.score += @sm.calc_chain_score(@connect_table, @chain)
     eliminate_connection
     @eliminated
   end
 
   def start_fall_jammer
+    # reset chain
+    @chain = 0
+
     fall_table = @jm.get_fall_table
     fall_table.each.with_index do |jammers, row|
       # col => block

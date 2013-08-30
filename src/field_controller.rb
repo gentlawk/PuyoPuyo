@@ -10,6 +10,7 @@ class FieldController
     @colors = [:r, :g, :b, :y]
     @row_s = row_s; @line_s = line_s; @block_s = block_s
     init_control_block_manager
+    init_score_manager
     init_field
     init_phase
   end
@@ -17,8 +18,11 @@ class FieldController
     @cbm = ControlBlockManager.new
     @cbm.set_type(PivotControlBlock)
   end
+  def init_score_manager
+    @sm = ScoreManager.new
+  end
   def init_field
-    @field = Field.new(@row_s, @line_s, @block_s, @cbm)
+    @field = Field.new(@row_s, @line_s, @block_s, @cbm, @sm)
   end
   def init_phase
     @phase = Phase.new
@@ -43,7 +47,7 @@ class FieldController
   end
   def update
     #### debug ####
-    @field.instance_eval{Debug.print @jm.jammers}
+    Debug.print @sm.debug_sprintf
     ###############
     update_blocks
     draw_field
