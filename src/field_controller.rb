@@ -58,12 +58,7 @@ class FieldController
   end
   
   def update_control_block
-    inputs =
-      [
-       input_move_row?,
-       input_rotate_right?, input_rotate_left?,
-       input_fastfall?
-      ]
+    inputs = [input_move_row?,input_rotate?,input_fastfall?]
     active = @field.update_control_block(*inputs)
     @phase.change :falldown unless active
   end
@@ -98,8 +93,7 @@ class FieldController
   end
 
   def input_move_row?; false; end
-  def input_rotate_right?; false; end
-  def input_rotate_left?; false; end
+  def input_rotate?; false; end
   def input_fastfall?; false; end
 #  def input_momentfall?; false; end
 end

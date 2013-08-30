@@ -9,6 +9,7 @@ class ScenePuyoPuyo < SceneBase
     @players = []
     @players.push(Player1.new(16,16,6,12,16))
     # test
+=begin
     @players.first.instance_eval{ @field.set_table(<<EOF)
 ......
 ......
@@ -24,6 +25,7 @@ class ScenePuyoPuyo < SceneBase
 .ryrgb
 EOF
     }
+=end
   end
 
   def main

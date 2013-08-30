@@ -57,11 +57,11 @@ class Field
   def start_control_block(colors)
     pivot = FreeBlock.new(colors.sample, @block_s)
     belong = FreeBlock.new(colors.sample, @block_s)
-    @ctrl_block.set(pivot, belong, 80)
+    @ctrl_block.set(pivot, belong, 40)
     @ctrl_block.start
   end
 
-  def update_control_block(imr,irr,irl,iff)
+  def update_control_block(imr,ir,iff)
     update_control_block_move_x(imr)
     active = update_control_block_move_y(iff)
   end
@@ -140,6 +140,11 @@ class Field
     while !@checklist.empty?
       block = @checklist.first
       r = block.row; l = block.line
+      # not consider if block out of screen
+      if r < 0 || r >= @row_s || l < 0 || l >= @line_s
+        @checklist.shift
+        next
+      end
       col = block.color
       @connect_table.push []
       check_connection(r,l,col)

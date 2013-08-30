@@ -19,16 +19,16 @@ class Human < FieldController
   end
 
   def input_move_row?
-    ir = @ipt_ctrl.press?(:right)
-    il = @ipt_ctrl.press?(:left)
-    return 0 unless ir ^ il
-    return ir ? 1 : -1
+    return 0 unless @ipt_ctrl.press?(:right) ^ @ipt_ctrl.press?(:left)
+    return 1 if @ipt_ctrl.repeat?(:right)
+    return -1 if @ipt_ctrl.repeat?(:left)
+    return 0
   end
-  def input_rotate_right?
-    @ipt_ctrl.press?(:button1)
-  end
-  def input_rotate_left?
-    @ipt_ctrl.trigger?(:button2)
+  def input_rotate?
+    # omit input concurrency because 'trigger returns true' is only 1 frame
+    return 1 if @ipt_ctrl.trigger?(:button1)
+    return -1 if @ipt_ctrl.trigger?(:button2)
+    return 0
   end
   def input_fastfall?
     @ipt_ctrl.press?(:down)

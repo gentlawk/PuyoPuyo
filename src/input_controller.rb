@@ -5,6 +5,8 @@
 #                               @author gentlawk                               #
 #==============================================================================#
 class InputController
+  @@repeat_delay = 6
+  @@repeat_interval = 1
   @@keys = [:up, :down, :right, :left, :button1, :button2]
   @@keymap = []
   @@keymap[1] = { # Player1 keymap
@@ -45,6 +47,13 @@ class InputController
 
   def press?(key); @press_count[key] > 0; end
   def trigger?(key); @press_count[key] == 1; end
+  def repeat?(key)
+    count = @press_count[key]
+    return false if count == 0
+    return true if count == 1
+    return false if count <= @@repeat_delay + 2
+    return (count - @@repeat_delay - 2) % @@repeat_interval == 0
+  end
 end
 
 if __FILE__ == "input_controller.rb"
