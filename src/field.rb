@@ -7,21 +7,17 @@
 class Field
   attr_reader :table
 
-  def initialize(row_s, line_s, block_s)
+  def initialize(row_s, line_s, block_s, cbm)
     @row_s = row_s
     @line_s = line_s
     @block_s = block_s
     @fallen = false
     @eliminated = false
-    init_control_block_manager
+    @cbm = cbm
     init_table
     init_jammer_manager
     init_blocklist
     init_connect_table
-  end
-  def init_control_block_manager
-    @cbm = ControlBlockManager.new
-    @cbm.set_type(PivotControlBlock)
   end
   def init_table
     @table = Array.new(@row_s){ [] }
@@ -67,11 +63,11 @@ class Field
     @collapse_blocks.delete_if{|block| !block.collapse? }
   end
 
-  def start_control_block(colors)
-    @cbm.ctrl_block.clear
-    pivot = FreeBlock.new(colors.sample, @block_s)
-    belong = FreeBlock.new(colors.sample, @block_s)
-    @cbm.ctrl_block.set(pivot, belong, 40)
+  def start_control_block(*colors)
+    blocks = colors.map{ |color|
+      FreeBlock.new(color, @block_s)
+    }
+    @cbm.ctrl_block.set(*blocks, 40)
     @cbm.ctrl_block.start((@row_s - 1) / 2, @line_s)
   end
 

@@ -9,11 +9,16 @@ class FieldController
     @x = x; @y = y
     @colors = [:r, :g, :b, :y]
     @row_s = row_s; @line_s = line_s; @block_s = block_s
+    init_control_block_manager
     init_field
     init_phase
   end
+  def init_control_block_manager
+    @cbm = ControlBlockManager.new
+    @cbm.set_type(PivotControlBlock)
+  end
   def init_field
-    @field = Field.new(@row_s, @line_s, @block_s)
+    @field = Field.new(@row_s, @line_s, @block_s, @cbm)
   end
   def init_phase
     @phase = Phase.new
@@ -58,7 +63,10 @@ class FieldController
   end
   
   def start_control_block
-    @field.start_control_block(@colors)
+    @cbm.ctrl_block.clear
+    pivot = @colors.sample
+    belong = @colors.sample
+    @field.start_control_block(pivot, belong)
   end
   def start_fall_jammer
     @field.start_fall_jammer
