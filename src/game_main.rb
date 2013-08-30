@@ -6,12 +6,14 @@
 #==============================================================================#
 module GameMain
   @scene = []
-  @gamemode = :single_player
+  @gamemode = :two_player
 
   def self.main
     scene = case @gamemode
             when :single_player
               SceneSinglePlayer
+            when :two_player
+              SceneTwoPlayer
             end
     scene_push(scene)
     StarRuby::Game.run(320, 240, :title => "PuyoPuyo", :fps => 60) do |game|

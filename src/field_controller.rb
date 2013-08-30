@@ -5,11 +5,14 @@
 #                               @author gentlawk                               #
 #==============================================================================#
 class FieldController
+  attr_reader :field
+
   def initialize(x,y,row_s, line_s, block_s)
     @x = x; @y = y
     @colors = [:r, :g, :b, :y]
     @row_s = row_s; @line_s = line_s; @block_s = block_s
     @drown_area = [[2,11]]
+    @rivals = []
     init_control_block_manager
     init_score_manager
     init_field
@@ -36,6 +39,8 @@ class FieldController
     # added :elimiate handler
     @phase.add_condition_handler(:eliminate,
                                  method(:eliminate_cond))
+    @phase.add_end_handler(:eliminate, :fall_jammer,
+                           method(:end_eliminate_to_fall_jammer))
     # added :fall_jammer handler
     @phase.add_start_handler(:fall_jammer,
                          method(:start_fall_jammer))
@@ -45,20 +50,22 @@ class FieldController
                            method(:end_fall_jammer_to_control_block))
     # added :gameover handler
     @phase.add_condition_handler(:gameover, method(:gameover_cond))
+    # added :win handler
+    @phase.add_condition_handler(:win, method(:win_cond))
 
     @phase.change :control_block
   end
+
+  def rivals=(rivals)
+    @rivals = rivals
+    @field.rivals = rivals
+  end
+
   def update
     #### debug ####
     Debug.print @sm.debug_sprintf
-    margin = GameMain.scene.margin_time
-    playtime = GameMain.scene.playtime
-    Debug.print "margin:#{margin}"
-    Debug.print "sec:#{playtime / 60}"
-    Debug.print "jammers:#{@field.instance_eval{@jm.jammers}}"
-    Debug.print "jam_rate:#{@field.instance_eval{@jm.calc_effective_rate(@jammer_rate,margin,playtime)}}"
-    Debug.print "jam_calc:#{@field.instance_eval{@jm.gen_jammers}}"
-    Debug.print "rest:#{@field.instance_eval{@jm.instance_eval{@rest}}}"
+    jm = @field.jm
+    Debug.print "#{jm.total_jammers} = #{jm.jammers} + #{jm.total_rivals_buf}"
     ###############
     update_blocks
     draw_field
@@ -77,11 +84,22 @@ class FieldController
       update_fall_jammer
     when :gameover
       update_gameover
+    when :win
+      update_win
     end
   end
 
   def dead?
     @phase.dead?
+  end
+
+  def gameover?
+    @phase.phase == :gameover
+  end
+
+  def rivals_gameover?
+    return false if @rivals.empty?
+    @rivals.all? {|rival| rival.dead? || rival.gameover? }
   end
   
   def start_control_block
@@ -94,6 +112,10 @@ class FieldController
     @field.start_fall_jammer
   end
   
+  def end_eliminate_to_fall_jammer
+    # establish jammers
+    @field.jm.establish_jammers
+  end
   def end_fall_jammer_to_control_block
     @phase.set_timer(16)
     # delete blocks is over limited line
@@ -104,7 +126,11 @@ class FieldController
     inputs = [input_move_row?,input_rotate?,
               input_fastfall?,input_momentfall?]
     active = @field.update_control_block(*inputs)
-    @phase.change :falldown unless active
+    if active
+      @phase.change :win if rivals_gameover?
+    else
+      @phase.change :falldown
+    end
   end
   def update_falldown
     fallen = @field.falldown
@@ -112,7 +138,11 @@ class FieldController
   end
   def update_eliminate
     eliminated = @field.eliminate
-    @phase.change eliminated ? :falldown : :fall_jammer
+    if eliminated
+      @phase.change :falldown
+    else
+      @phase.change rivals_gameover? ? :win : :fall_jammer
+    end
   end
   def update_fall_jammer
     fallen = @field.falldown(-10, false)
@@ -120,6 +150,10 @@ class FieldController
     @phase.change (gameover ? :gameover : :control_block)
   end
   def update_gameover
+    @phase.wait(60)
+    @phase.change :term
+  end
+  def update_win
     @phase.wait(60)
     @phase.change :term
   end
@@ -137,6 +171,9 @@ class FieldController
     !@field.blocks_move? && !@field.blocks_land? && @phase.pred_timer
   end
   def gameover_cond
+    @phase.kill
+  end
+  def win_cond
     @phase.kill
   end
 

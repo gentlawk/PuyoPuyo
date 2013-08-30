@@ -7,6 +7,7 @@
 class JammerManager
   attr_accessor :jammers
   attr_reader :gen_jammers
+  attr_accessor :rivals_buf
 
   def initialize(row_s, line_s)
     @row_s = row_s
@@ -15,6 +16,8 @@ class JammerManager
     @rest = 0
     @fall_max = (line_s / 3 + 1) * row_s
     @gen_jammers = 0
+    @rivals_buf = {}
+    @rivals = []
     init_order
   end
 
@@ -25,6 +28,14 @@ class JammerManager
   def jammers=(num)
     @jammers = num
     @jammers = 0 if @jammers < 0
+  end
+
+  def rivals=(rivals)
+    @rivals = rivals.map{|rival| rival.field.jm }
+    @rivals_buf = {}
+    @rivals.each do |rival|
+      @rivals_buf[rival] = 0
+    end
   end
 
   def calc_effective_rate(rate, margin, playtime)
@@ -60,5 +71,59 @@ class JammerManager
       table[row] = Array.new(num, :j)
     end
     return table
+  end
+
+  def total_jammers
+    self.jammers + self.total_rivals_buf
+  end
+
+  def total_rivals_buf
+    @rivals_buf.inject(0){|sum,(rival,num)| sum + num}
+  end
+  def offset_rivals_buf(num)
+    return num if @rivals.empty?
+    offset_per = [num / @rivals.size, 1].max
+    rest = num
+    @rivals.shuffle.each do |rival|
+      return 0 if rest == 0
+      if rest >= offset_per && @rivals_buf[rival] >= offset_per
+        @rivals_buf[rival] -= offset_per
+        rest -= offset_per
+      elsif @rivals_buf[rival] >= rest
+        @rivals_buf[rival] -= rest
+        rest = 0
+      else
+        rest -= @rivals_buf[rival]
+        @rivals_buf[rival] = 0
+      end
+    end
+    rest = offset_rivals_buf(num) if rest < num
+    rest
+  end
+
+  def store_buf(num)
+    # offset certain jammers
+    rest = num - self.jammers
+    self.jammers -= num
+    return if rest <= 0
+    # offset buffered jammers
+    rest = offset_rivals_buf(rest)
+    # attack
+    @rivals.each do |rival|
+      next if rival.rivals_buf[self].nil?
+      rival.rivals_buf[self] += rest
+    end
+  end
+
+  def establish_rival_buf(rival)
+    return if @rivals_buf[rival].nil?
+    @jammers += @rivals_buf[rival]
+    @rivals_buf[rival] = 0
+  end
+
+  def establish_jammers
+    @rivals.each do |rival|
+      rival.establish_rival_buf(self)
+    end
   end
 end

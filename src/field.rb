@@ -7,6 +7,7 @@
 class Field
   attr_reader :table
   attr_reader :chain
+  attr_reader :jm
 
   def initialize(row_s, line_s, block_s, drown_area, cbm, sm)
     @row_s = row_s
@@ -47,6 +48,11 @@ class Field
     @connect_table = []
     @checklist = []
   end
+
+  def rivals=(rivals)
+    @jm.rivals = rivals
+  end
+
   def set(r,l,col)
     if @table[r][l]
       @active_blocks.delete @table[r][l]
@@ -251,7 +257,8 @@ class Field
     @sm.score += @sm.calc_chain_score(@connect_table, @chain)
     scene = GameMain.scene
     unless @connect_table.empty?
-      # @jm.jammers += @jm.calc_jammer(@sm.chain_score, @jammer_rate, scene.margin_time, scene.playtime)
+      jammers = @jm.calc_jammer(@sm.chain_score, @jammer_rate, scene.margin_time, scene.playtime)
+      @jm.store_buf(jammers)
     end
     eliminate_connection
     @eliminated

@@ -25,9 +25,10 @@ class ScenePuyoPuyo < SceneBase
 
   def update
     super
-    all_dead = @players.all? do |controller|
+    all_dead = true
+    @players.each do |controller|
       controller.update
-      controller.dead?
+      all_dead = false unless controller.dead?
     end
     @playtime += 1
     gameover if all_dead
